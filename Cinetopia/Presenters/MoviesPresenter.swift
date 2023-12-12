@@ -25,13 +25,13 @@ class MoviesPresenter: MoviesPresenterToViewControllerProtocol {
     
     private var controller: MoviesViewControllerToPresenterProtocol?
     private var view: MoviesViewProtocol?
-    
-    private var movieService: MovieService = MovieService()
+    private var interactor: MoviesPresenterToInteractorProtocol?
     
     // MARK: - Init
     
-    init(view: MoviesViewProtocol) {
+    init(view: MoviesViewProtocol, interactor: MoviesPresenterToInteractorProtocol) {
         self.view = view
+        self.interactor = interactor
     }
     
     // MARK: - MoviesPresenterToViewControllerProtocol
@@ -55,7 +55,7 @@ class MoviesPresenter: MoviesPresenterToViewControllerProtocol {
     
     private func fetchMovies() async {
         do {
-            let movies = try await movieService.getMovies()
+            guard let movies = try await interactor?.fetchMovies() else { return }
             view?.setupView(with: movies)
             view?.reloadData()
         } catch (let error) {
