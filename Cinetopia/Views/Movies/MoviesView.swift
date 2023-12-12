@@ -8,6 +8,7 @@
 import UIKit
 
 protocol MoviesViewProtocol: AnyObject {
+    func setPresenter(_ presenter: MoviesPresenterToViewProtocol)
     func setupView(with movies: [Movie])
     func reloadData()
     func navigateToMovieDetails(movie: Movie)
@@ -22,6 +23,8 @@ class MoviesView: UIView {
     private var filteredMovies: [Movie] = []
     private var isSearchActive: Bool = false
     private var movies: [Movie] = []
+    
+    private var presenter: MoviesPresenterToViewProtocol?
 
     // MARK: - UI Components
     
@@ -92,8 +95,7 @@ extension MoviesView: UITableViewDataSource, UITableViewDelegate {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
         let movie = isSearchActive ? filteredMovies[indexPath.row] : movies[indexPath.row]
-        let detailsVC = MovieDetailsViewController(movie: movie)
-//        navigationController?.pushViewController(detailsVC, animated: true)
+        presenter?.didSelect(movie: movie)
     }
     
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
@@ -120,6 +122,10 @@ extension MoviesView: MovieTableViewCellDelegate {
 }
 
 extension MoviesView: MoviesViewProtocol {
+    func setPresenter(_ presenter: MoviesPresenterToViewProtocol) {
+        self.presenter = presenter
+    }
+    
     func setupView(with movies: [Movie]) {
         self.movies = movies
     }

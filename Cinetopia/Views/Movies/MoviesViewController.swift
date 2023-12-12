@@ -7,6 +7,10 @@
 
 import UIKit
 
+protocol MoviesViewControllerToPresenterProtocol: AnyObject {
+    func didSelectMovie(_ movie: Movie)
+}
+
 class MoviesViewController: UIViewController {
     
     private var movieService: MovieService = MovieService()
@@ -63,5 +67,12 @@ extension MoviesViewController: UISearchBarDelegate {
 //            isSearchActive = true
 //        }
 //        tableView.reloadData()
+    }
+}
+
+extension MoviesViewController: MoviesViewControllerToPresenterProtocol {
+    func didSelectMovie(_ movie: Movie) {
+        let detailsVC = MovieDetailsViewController(movie: movie)
+        navigationController?.pushViewController(detailsVC, animated: true)
     }
 }
