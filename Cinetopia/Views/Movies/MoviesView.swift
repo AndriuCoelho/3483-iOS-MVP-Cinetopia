@@ -8,9 +8,9 @@
 import UIKit
 
 protocol MoviesViewProtocol: AnyObject {
+    func setPresenter(_ presenter: MoviesPresenterToViewProtocol)
     func setupView(with movies: [Movie])
     func reloadData()
-    func navigateToMovieDetails(movie: Movie)
     func reloadRow(at indexPath: IndexPath)
     func toggle(_ isActive: Bool)
 }
@@ -22,6 +22,8 @@ class MoviesView: UIView {
     private var filteredMovies: [Movie] = []
     private var isSearchActive: Bool = false
     private var movies: [Movie] = []
+    
+    private var presenter: MoviesPresenterToViewProtocol?
 
     // MARK: - UI Components
     
@@ -39,7 +41,7 @@ class MoviesView: UIView {
         let searchBar = UISearchBar()
         searchBar.placeholder = "Pesquisar"
         searchBar.searchTextField.backgroundColor = .white
-//        searchBar.delegate = self
+        searchBar.delegate = self
         return searchBar
     }()
     
@@ -92,8 +94,7 @@ extension MoviesView: UITableViewDataSource, UITableViewDelegate {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
         let movie = isSearchActive ? filteredMovies[indexPath.row] : movies[indexPath.row]
-        let detailsVC = MovieDetailsViewController(movie: movie)
-//        navigationController?.pushViewController(detailsVC, animated: true)
+        presenter?.didSelect(movie: movie)
     }
     
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
@@ -112,24 +113,25 @@ extension MoviesView: MovieTableViewCellDelegate {
         }
         
         let selectedMovie = movies[indexPath.row]
-        selectedMovie.changeSelectionStatus()
-        
-        MovieManager.shared.add(selectedMovie)
+
+        presenter?.didSelectFavoriteButton(selectedMovie)
         tableView.reloadRows(at: [indexPath], with: .automatic)
     }
 }
 
 extension MoviesView: MoviesViewProtocol {
+    func setPresenter(_ presenter: MoviesPresenterToViewProtocol) {
+        self.presenter = presenter
+    }
+    
     func setupView(with movies: [Movie]) {
         self.movies = movies
     }
     
     func reloadData() {
-        tableView.reloadData()
-    }
-    
-    func navigateToMovieDetails(movie: Movie) {
-        
+        DispatchQueue.main.async {
+            self.tableView.reloadData()
+        }
     }
     
     func reloadRow(at indexPath: IndexPath) {
@@ -138,5 +140,13 @@ extension MoviesView: MoviesViewProtocol {
     
     func toggle(_ isActive: Bool) {
         self.isSearchActive = isActive
+    }
+}
+
+extension MoviesView: UISearchBarDelegate {
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        presenter?.didSearchText(searchBar,
+                                 textDidChange: searchText, movies, &filteredMovies)
+        tableView.reloadData()
     }
 }
